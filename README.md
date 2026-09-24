@@ -360,6 +360,21 @@ kubectl rollout undo deployment/web -n impianti      # torna alla versione prece
 | `kubectl` non risponde dopo aver riaperto il Codespace | `bash .devcontainer/post-start.sh` |
 | Il Codespace si spegne dopo 30 minuti senza usarlo | è normale. Si può alzare il tempo in https://github.com/settings/codespaces |
 
+# Gli script
+
+Sono tutti file di testo con comandi bash: si possono aprire e leggere. I primi due partono da soli, gli altri li lanciate voi o la pipeline.
+
+| Script | Quando parte | Chi lo lancia | Che cosa fa |
+|---|---|---|---|
+| `.devcontainer/post-create.sh` | una volta sola, quando si crea il Codespace | GitHub, da solo | installa k3d (per creare il cluster) e k9s (per guardarlo dal terminale) |
+| `.devcontainer/post-start.sh` | a ogni avvio del Codespace | GitHub, da solo | crea il cluster «lab» (o lo riaccende), installa Headlamp, riavvia il runner, stampa gli indirizzi |
+| `scripts/registra-runner.sh` | una volta sola, nel Laboratorio 1 | voi | chiede il token, scarica il runner e lo registra sul vostro repository con il nome `codespace` |
+| `scripts/avvia-runner.sh` | a ogni avvio del Codespace | `post-start.sh` | rimette in ascolto il runner, se è già registrato |
+| `scripts/deploy.sh` | a ogni deploy | il job `deploy` della pipeline (o voi, a mano) | applica i file di `k8s/` con le immagini appena pubblicate e aspetta che i pod siano pronti |
+| `scripts/indirizzi.sh` | quando vi serve | voi (e `post-start.sh`) | stampa gli indirizzi di Headlamp e dell'app |
+
+Se qualcosa non parte all'avvio del Codespace, si rilancia a mano: `bash .devcontainer/post-start.sh`.
+
 # I file del laboratorio
 
 | File | A che cosa serve |
@@ -371,5 +386,5 @@ kubectl rollout undo deployment/web -n impianti      # torna alla versione prece
 | `scripts/registra-runner.sh` | collega il Codespace alla pipeline |
 | `scripts/indirizzi.sh` | stampa gli indirizzi di Headlamp e dell'app |
 | `.github/workflows/ci.yml` | la pipeline |
-| `.devcontainer/` | com'è fatto il Codespace: strumenti, cluster, Headlamp |
+| `.devcontainer/devcontainer.json` | com'è fatta la macchina del Codespace: Docker, kubectl, porte, script da lanciare |
 | [APP.md](APP.md) | com'è fatta l'applicazione |
