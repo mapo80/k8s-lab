@@ -80,7 +80,9 @@ Obiettivo: avere un cluster Kubernetes tutto vostro, collegato alla pipeline, e 
 3. Aspettate che nel terminale compaia:
 
 ```
-✅ Il cluster è pronto. Headlamp: scheda PORTS → porta 30090.
+✅ Il cluster è pronto.
+Headlamp:      https://<nome-codespace>-30090.app.github.dev
+Applicazione:  https://<nome-codespace>-30080.app.github.dev   (dopo il primo deploy)
 ```
 
 4. Provate:
@@ -114,8 +116,13 @@ Il job «deploy» della pipeline deve girare **nel vostro Codespace**, perché i
 
 ### Passo 4: gli strumenti grafici
 
-1. In basso nel Codespace aprite la scheda **PORTS**.
-2. Sulla riga **Headlamp (30090)** cliccate l'icona del globo 🌐.
+Ci sono tre modi per trovare l'indirizzo di Headlamp:
+
+1. **Dal messaggio di avvio**: è la riga `Headlamp: https://…-30090.app.github.dev`. Ctrl+clic per aprirla.
+2. **Dal terminale**, in qualsiasi momento: `./scripts/indirizzi.sh`
+3. **Dalla scheda PORTS**, in basso nel Codespace: riga **Headlamp (30090)**, colonna **Forwarded Address**. Il globo 🌐 la apre.
+
+Attenzione alla porta: è **30090** (con tre zeri), non 3090.
 
 ✅ **Ce l'avete fatta se** si apre Headlamp e vedete il cluster. Tenetelo aperto: lo useremo sempre.
 
@@ -339,6 +346,7 @@ kubectl rollout undo deployment/web -n impianti
 | `k8s/web.yaml` | il frontend: Deployment e Service sulla porta 30080 |
 | `scripts/deploy.sh` | il deploy: applica i file di `k8s/` e aspetta che i pod siano pronti |
 | `scripts/registra-runner.sh` | collega il Codespace alla pipeline |
+| `scripts/indirizzi.sh` | stampa gli indirizzi di Headlamp e dell'app |
 | `.github/workflows/ci.yml` | la pipeline |
 | `.devcontainer/` | com'è fatto il Codespace: strumenti, cluster, Headlamp |
 | [APP.md](APP.md) | com'è fatta l'applicazione |

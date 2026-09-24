@@ -37,4 +37,5 @@ helm upgrade --install headlamp headlamp/headlamp \
 echo
 kubectl get nodes
 echo
-echo "✅ Il cluster è pronto. Headlamp: scheda PORTS → porta 30090."
+echo "✅ Il cluster è pronto."
+./scripts/indirizzi.sh
