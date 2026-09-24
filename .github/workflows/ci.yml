@@ -104,8 +104,9 @@ jobs:
     # gira nel vostro Codespace (il runner «codespace»), dove c'è il cluster.
     # Se il Codespace è spento, il job aspetta che lo riapriate.
     needs: publish
-    # solo nella vostra copia: il repository del corso non ha un cluster
-    if: github.repository != 'its-java-backend-2026/k8s-lab'
+    # - solo nella vostra copia: il repository del corso non ha un cluster
+    # - non sul primo commit (la copia dal template): il primo deploy lo lanciate voi nel Laboratorio 2
+    if: github.repository != 'its-java-backend-2026/k8s-lab' && github.event.head_commit.message != 'Initial commit'
     runs-on: [self-hosted, k8s-lab]
     # un deploy alla volta
     concurrency: deploy

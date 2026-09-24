@@ -73,6 +73,8 @@ Obiettivo: avere un cluster Kubernetes tutto vostro, collegato alla pipeline, e 
 
 ✅ **Ce l'avete fatta se** avete il repository `<vostro-utente>/k8s-lab`. È vostro: da qui in poi lavorate solo lì.
 
+Nella scheda **Actions** vedrete una pipeline partita da sola: prepara test e immagini, ma non fa il deploy. Il primo deploy lo lanciate voi nel Laboratorio 2.
+
 ### Passo 2: aprite il Codespace
 
 1. Nel vostro repository: pulsante verde **Code** → scheda **Codespaces** → **Create codespace on main**.
@@ -204,7 +206,7 @@ La pipeline ha 4 job:
 
 ### Passo 2: guardate i pod che partono
 
-Mentre gira il job `deploy`, nel terminale del Codespace:
+Lanciate questo comando **subito dopo Run workflow**, prima che parta il job `deploy`, e lasciatelo aperto:
 
 ```bash
 kubectl get pods -n impianti -w
@@ -213,7 +215,7 @@ kubectl get pods -n impianti -w
 Vedrete, in ordine:
 
 1. parte `db`;
-2. `app` resta in `Init:0/1`: il suo initContainer aspetta il database;
+2. `app` resta in `Init:0/1` per qualche secondo: il suo initContainer aspetta il database;
 3. `app` diventa `Running 0/1`: Spring Boot si sta avviando;
 4. `app` diventa `1/1`: è pronto;
 5. `web` è `1/1`.
