@@ -140,10 +140,12 @@ Proviamo i comandi base con un'immagine semplice (nginx), in un namespace di pro
 ### Creare un Deployment con 2 pod
 
 ```bash
-kubectl create namespace prove
-kubectl create deployment ciao --image=nginx:alpine --replicas=2 -n prove
-kubectl get pods -n prove
+kubectl create namespace prove                                              # crea il namespace «prove»
+kubectl create deployment ciao --image=nginx:alpine --replicas=2 -n prove   # Deployment «ciao»: 2 pod con nginx
+kubectl get pods -n prove                                                   # elenca i pod del namespace
 ```
+
+`-n prove` dice in quale namespace lavorare. Senza, kubectl usa il namespace `default`.
 
 ✅ Vedete **2 pod** `ciao-...` in stato `Running`. Guardateli anche in Headlamp: **Workloads → Pods** (in alto scegliete il namespace `prove`).
 
@@ -152,8 +154,8 @@ kubectl get pods -n prove
 Cancellate uno dei due pod: copiate il suo nome dall'elenco di prima.
 
 ```bash
-kubectl delete pod <nome-del-pod> -n prove
-kubectl get pods -n prove
+kubectl delete pod <nome-del-pod> -n prove   # cancella quel pod
+kubectl get pods -n prove                    # elenca di nuovo i pod
 ```
 
 ✅ Ci sono **ancora 2 pod**: Kubernetes ne ha creato subito uno nuovo, perché il Deployment dice «voglio 2 pod».
@@ -161,9 +163,11 @@ kubectl get pods -n prove
 ### Da 2 a 4 pod
 
 ```bash
-kubectl scale deployment ciao --replicas=4 -n prove
+kubectl scale deployment ciao --replicas=4 -n prove   # da 2 a 4 pod
 kubectl get pods -n prove
 ```
+
+`scale` cambia il numero di pod voluti: Kubernetes ne accende 2 in più.
 
 ✅ Adesso i pod sono **4**.
 
@@ -240,8 +244,11 @@ Per ogni esperimento: lanciate il comando e guardate che cosa succede in Headlam
 ### 1. I dati restano
 
 ```bash
-kubectl delete pod -l app=db -n impianti
+kubectl delete pod -l app=db -n impianti   # cancella i pod con l'etichetta app=db
+kubectl get pods -n impianti -w            # guarda i pod e resta in ascolto
 ```
+
+`-l app=db` sceglie i pod per etichetta: così non serve copiare il nome. `-w` tiene il comando aperto e mostra ogni cambiamento (Ctrl+C per uscire).
 
 Aspettate che il nuovo pod `db` sia `Running`, poi ricaricate l'elenco degli enti.
 
@@ -250,11 +257,11 @@ Aspettate che il nuovo pod `db` sia `Running`, poi ricaricate l'elenco degli ent
 ### 2. Due copie del backend
 
 ```bash
-kubectl scale deployment app --replicas=2 -n impianti
-kubectl describe service app -n impianti
+kubectl scale deployment app --replicas=2 -n impianti   # 2 pod del backend
+kubectl describe service app -n impianti                # i dettagli del Service
 ```
 
-✅ Alla riga `Endpoints` ci sono **2 indirizzi**: il Service divide le richieste tra i due pod.
+✅ Nell'output di `describe`, la riga `Endpoints` elenca gli indirizzi dei pod dietro al Service: ora sono **2**, e il Service divide le richieste tra loro.
 
 Poi tornate a 1:
 
@@ -265,7 +272,7 @@ kubectl scale deployment app --replicas=1 -n impianti
 ### 3. Senza database
 
 ```bash
-kubectl scale deployment db --replicas=0 -n impianti
+kubectl scale deployment db --replicas=0 -n impianti   # zero pod del database: il database è spento
 ```
 
 Aspettate 15 secondi e ricaricate l'app.
@@ -282,20 +289,22 @@ kubectl scale deployment db --replicas=1 -n impianti
 
 ### 4. Un'immagine sbagliata
 
+Simuliamo un deploy sbagliato: diamo al frontend un'immagine che non esiste.
+
 ```bash
-kubectl set image deployment/web web=nginx:non-esiste -n impianti
+kubectl set image deployment/web web=nginx:non-esiste -n impianti   # cambia l'immagine del Deployment web
 kubectl get pods -n impianti
 ```
 
-✅ Il pod nuovo è in `ErrImagePull`, ma **il vecchio pod è ancora lì e l'app funziona**. Kubernetes toglie il pod vecchio solo quando quello nuovo è pronto.
+✅ Kubernetes prova ad avviare un pod nuovo con quell'immagine: il pod va in `ErrImagePull`, cioè non riesce a scaricarla. Ma **il vecchio pod è ancora lì e l'app funziona**: Kubernetes toglie il pod vecchio solo quando quello nuovo è pronto.
 
-Tornate indietro:
+Rimettete l'immagine di prima:
 
 ```bash
-kubectl rollout undo deployment/web -n impianti
+kubectl rollout undo deployment/web -n impianti   # torna alla versione precedente del Deployment
 ```
 
-(Il `Warning` che compare è normale.)
+(Il `Warning` che compare è normale.) Come funziona `rollout undo` lo vediamo nella Parte C.
 
 ## Parte C — Una nuova versione
 
@@ -310,22 +319,32 @@ kubectl rollout undo deployment/web -n impianti
 La pipeline parte da sola. Quando arriva al job `deploy`:
 
 ```bash
-kubectl get pods -n impianti -w
+kubectl get pods -n impianti -l app=web -w   # solo i pod del frontend, in ascolto
 ```
 
 ✅ Parte un pod `web` nuovo, e quello vecchio si spegne **solo dopo**. Ricaricate l'app: il titolo è cambiato.
 
 Questo si chiama **rolling update**: la nuova versione arriva senza mai spegnere il sito.
 
+### Da dove arriva l'immagine
+
+- Il deploy scrive nel Deployment solo il **nome** dell'immagine: `ghcr.io/<voi>/k8s-lab/web:<commit>`.
+- Il nodo del cluster controlla se ha già quell'immagine. Se non ce l'ha, la scarica da GHCR usando il Secret `ghcr` (le credenziali). Da quel momento ne tiene una copia.
+- Ogni volta che cambia l'immagine, il Deployment salva una **versione** (in inglese *revision*) in un **ReplicaSet**: un oggetto che ricorda quale immagine usare e quanti pod accendere.
+- Le versioni vecchie restano con 0 pod: il nome dell'immagine è nel ReplicaSet, la copia dell'immagine è sul nodo.
+
 ### Passo 3: tornate alla versione di prima
 
 ```bash
-kubectl rollout undo deployment/web -n impianti
+kubectl rollout history deployment/web -n impianti   # l'elenco delle versioni salvate
+kubectl rollout undo deployment/web -n impianti      # torna alla versione precedente
 ```
+
+`rollout undo` riaccende il ReplicaSet della versione precedente e spegne quello attuale, con un rolling update: il sito resta acceso. Il nodo ha già la copia dell'immagine vecchia, quindi bastano pochi secondi.
 
 ✅ Ricaricate l'app: il titolo di prima è tornato.
 
-> In un progetto vero si torna indietro con un `git revert` e un nuovo push: la versione giusta è sempre quella nel repository.
+> Attenzione: `rollout undo` cambia solo il cluster, non il repository. Al prossimo push la pipeline rimette la versione del repository. Per tornare indietro davvero si usa `git revert` e un nuovo push.
 
 ---
 
