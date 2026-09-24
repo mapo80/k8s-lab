@@ -85,7 +85,7 @@ Nella scheda **Actions** vedrete una pipeline partita da sola: prepara test e im
 ```
 ✅ Il cluster è pronto.
 Headlamp:      https://<nome-codespace>-30090.app.github.dev
-Applicazione:  https://<nome-codespace>-30080.app.github.dev   (dopo il primo deploy)
+Applicazione:  non ancora installata. La installa la pipeline: Actions → CI/CD → Run workflow
 ```
 
 4. Provate:
@@ -122,7 +122,7 @@ Il job «deploy» della pipeline deve girare **nel vostro Codespace**, perché i
 Ci sono tre modi per trovare l'indirizzo di Headlamp:
 
 1. **Dal messaggio di avvio**: è la riga `Headlamp: https://…-30090.app.github.dev`. Ctrl+clic per aprirla.
-2. **Dal terminale**, in qualsiasi momento: `./scripts/indirizzi.sh`
+2. **Dal terminale**, in qualsiasi momento: `./scripts/indirizzi.sh`. Dopo il primo deploy stampa anche l'indirizzo dell'app.
 3. **Dalla scheda PORTS**, in basso nel Codespace: riga **Headlamp (30090)**, colonna **Forwarded Address**. Ctrl+clic sull'indirizzo per aprirlo.
 
 Attenzione alla porta: è **30090** (con tre zeri), non 3090.
