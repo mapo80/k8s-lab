@@ -226,7 +226,7 @@ Premete **Ctrl+C** per uscire.
 
 ### Passo 3: aprite l'applicazione
 
-1. Nel terminale lanciate `./scripts/indirizzi.sh` e fate Ctrl+clic sulla riga **Applicazione**. Lo stesso indirizzo è nella scheda **PORTS** (riga **App (30080)**, colonna **Forwarded Address**) e nel riepilogo del job `deploy`.
+1. Nel terminale lanciate `./scripts/indirizzi.sh` e fate Ctrl+clic sulla riga **Applicazione**. Lo stesso indirizzo è nella scheda **PORTS** (riga **App (30080)**, colonna **Forwarded Address**) e su GitHub, nella pagina della pipeline: **Actions** → il run → **Summary**.
 2. Andate su **Importazione** e importate gli enti.
 
 ✅ **Ce l'avete fatta se** vengono importati **1.739 enti** e li vedete nell'elenco.
