@@ -120,7 +120,7 @@ Ci sono tre modi per trovare l'indirizzo di Headlamp:
 
 1. **Dal messaggio di avvio**: è la riga `Headlamp: https://…-30090.app.github.dev`. Ctrl+clic per aprirla.
 2. **Dal terminale**, in qualsiasi momento: `./scripts/indirizzi.sh`
-3. **Dalla scheda PORTS**, in basso nel Codespace: riga **Headlamp (30090)**, colonna **Forwarded Address**. Il globo 🌐 la apre.
+3. **Dalla scheda PORTS**, in basso nel Codespace: riga **Headlamp (30090)**, colonna **Forwarded Address**. Ctrl+clic sull'indirizzo per aprirlo.
 
 Attenzione alla porta: è **30090** (con tre zeri), non 3090.
 
@@ -224,7 +224,7 @@ Premete **Ctrl+C** per uscire.
 
 ### Passo 3: aprite l'applicazione
 
-1. Scheda **PORTS** → riga **App (30080)** → icona del globo 🌐. Il link c'è anche nel riepilogo del job `deploy`.
+1. Nel terminale lanciate `./scripts/indirizzi.sh` e fate Ctrl+clic sulla riga **Applicazione**. Lo stesso indirizzo è nella scheda **PORTS** (riga **App (30080)**, colonna **Forwarded Address**) e nel riepilogo del job `deploy`.
 2. Andate su **Importazione** e importate gli enti.
 
 ✅ **Ce l'avete fatta se** vengono importati **1.739 enti** e li vedete nell'elenco.
