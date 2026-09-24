@@ -37,6 +37,7 @@ L'applicazione è quella della prova pratica, «Impianti sportivi in Puglia». N
 | **Cluster** | l'insieme di macchine su cui Kubernetes fa girare i container. Il vostro ha una macchina sola. |
 | **Pod** | un container in esecuzione (a volte più di uno). |
 | **Deployment** | la regola «voglio N pod di questa immagine». Se un pod muore, Kubernetes ne crea un altro. |
+| **ReplicaSet** | lo crea il Deployment, uno per ogni versione dell'immagine: tiene acceso il numero giusto di pod di quella versione. |
 | **Service** | un nome fisso per raggiungere i pod: `db`, `app`, `web`. |
 | **Secret** | un posto per le password. |
 | **PersistentVolumeClaim** | un disco: i dati restano anche se il pod viene cancellato. |
@@ -143,6 +144,7 @@ Proviamo i comandi base con un'immagine semplice (nginx), in un namespace di pro
 kubectl create namespace prove                                              # crea il namespace «prove»
 kubectl create deployment ciao --image=nginx:alpine --replicas=2 -n prove   # Deployment «ciao»: 2 pod con nginx
 kubectl get pods -n prove                                                   # elenca i pod del namespace
+kubectl get deployment,replicaset,pod -n prove                              # la catena: Deployment → ReplicaSet → pod
 ```
 
 `-n prove` dice in quale namespace lavorare. Senza, kubectl usa il namespace `default`.
