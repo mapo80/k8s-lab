@@ -1,0 +1,7 @@
+# Solo per i test end-to-end: la JVM del backend non tiene in cache le
+# risoluzioni DNS. Il test del 503 spegne e riaccende la finta sorgente
+# open data; mentre è spenta il nome "open-data" non si risolve, e la JVM
+# ricorderebbe il fallimento per 10 secondi (networkaddress.cache.negative.ttl
+# nel java.security del JDK), rispondendo 503 anche a sorgente riaccesa.
+networkaddress.cache.ttl=0
+networkaddress.cache.negative.ttl=0

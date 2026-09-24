@@ -1,0 +1,61 @@
+# Ambiente dei test end-to-end: database, finta sorgente open data e backend.
+# Lo avvia e lo spegne da solo Playwright (e2e/support/ambiente.js), a mano:
+#   docker compose -p impianti-e2e -f e2e/docker-compose.yml up -d --build --wait
+#
+# È separato dal docker-compose.yml del progetto per tre motivi:
+# - il database non ha volume: i dati stanno in memoria (tmpfs) e ogni
+#   esecuzione riparte da un database pulito;
+# - l'open data lo serve un nginx locale con il file reale del repository, così
+#   i test non dipendono da dati.puglia.it e i numeri (1739/0/1) sono stabili;
+# - le porte sono diverse (18080), così può girare accanto allo stack di sviluppo.
+services:
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: impianti
+      POSTGRES_USER: impianti
+      POSTGRES_PASSWORD: impianti
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U impianti -d impianti"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # la finta sorgente: lo stesso enti.json usato dai test di integrazione del backend
+  open-data:
+    image: nginx:1.29-alpine
+    volumes:
+      - ../../src/test/resources/open-data/enti.json:/usr/share/nginx/html/enti.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/enti.json"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: ../..
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/impianti
+      DB_USER: impianti
+      DB_PASSWORD: impianti
+      OPEN_DATA_URL: http://open-data/enti.json
+      # niente cache DNS nella JVM, solo qui: vedi e2e/dns-senza-cache.security
+      JAVA_TOOL_OPTIONS: -Djava.security.properties=/e2e/dns-senza-cache.security
+    volumes:
+      - ./dns-senza-cache.security:/e2e/dns-senza-cache.security:ro
+    ports:
+      - "18080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      open-data:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 10s

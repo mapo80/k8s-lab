@@ -1,0 +1,76 @@
+# ─── DATABASE (PostgreSQL) ────────────────────────────────────────────────
+# È il servizio «db» del docker-compose.yml, scritto per Kubernetes.
+
+# 1. Secret: nome del database, utente e password.
+#    (Sono qui in chiaro solo perché è un esercizio: in un progetto vero non si mettono in Git.)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credenziali
+  namespace: impianti
+stringData:
+  POSTGRES_DB: impianti
+  POSTGRES_USER: impianti
+  POSTGRES_PASSWORD: impianti
+---
+# 2. PersistentVolumeClaim: un disco da 1 GB per i dati.
+#    Il disco resta anche se il pod viene cancellato: i dati non si perdono.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dati-postgres
+  namespace: impianti
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+# 3. Deployment: «voglio 1 pod con PostgreSQL».
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  namespace: impianti
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # prima si ferma il pod vecchio, poi parte il nuovo (il disco è uno solo)
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: db-credenziali      # le variabili POSTGRES_* vengono dal Secret
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: dati
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: dati
+          persistentVolumeClaim:
+            claimName: dati-postgres
+---
+# 4. Service: dà al database il nome «db». Il backend si collega a db:5432.
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: impianti
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 5432

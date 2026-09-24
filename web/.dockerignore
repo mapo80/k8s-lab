@@ -1,0 +1,10 @@
+# nel contesto di build servono solo package*.json, index.html, vite.config.js, public e src
+node_modules/
+dist/
+reports/
+e2e/
+test-results/
+playwright-report/
+*.md
+Dockerfile
+.dockerignore

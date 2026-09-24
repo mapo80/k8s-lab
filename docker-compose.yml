@@ -1,0 +1,57 @@
+# Da una cartella appena clonata:
+#   docker compose up --build
+# Frontend:   http://localhost:3000
+# Swagger UI: http://localhost:8080/swagger-ui.html
+services:
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: impianti
+      POSTGRES_USER: impianti
+      POSTGRES_PASSWORD: impianti
+    ports:
+      - "5432:5432"
+    volumes:
+      - dati-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U impianti -d impianti"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/impianti
+      DB_USER: impianti
+      DB_PASSWORD: impianti
+    ports:
+      - "8080:8080"
+    depends_on:
+      # l'applicazione parte solo quando PostgreSQL accetta connessioni
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+  # il frontend: nginx serve la build di React e inoltra /api/... al backend
+  web:
+    build: ./web
+    ports:
+      - "3000:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  dati-postgres:

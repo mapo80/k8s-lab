@@ -1,0 +1,166 @@
+# Chiamate a tutti gli endpoint, nei casi di successo e di errore.
+# Con l'applicazione avviata (docker compose up --build) si eseguono da
+# IntelliJ o da VS Code con l'estensione REST Client, nell'ordine.
+
+@base = http://localhost:8080
+
+### ---------------------------------------------------------- importazione
+
+### 1. Importa gli enti dall'open data.
+# Dimostra: import da un endpoint dedicato e non all'avvio. Alla prima esecuzione
+# l'esito è { inseriti: 1739, giaPresenti: 0, scartati: 1 }: lo scartato è
+# l'ultimo elemento del file, { "ID": "" }.
+POST {{base}}/import/enti
+
+### 2. Rilancia la stessa importazione.
+# Dimostra: idempotenza. Nessun duplicato e nessun errore:
+# { inseriti: 0, giaPresenti: 1739, scartati: 1 }.
+POST {{base}}/import/enti
+
+### 3. GET sulla rotta dell'importazione.
+# Dimostra: 405 Method Not Allowed. La risorsa accetta solo POST, e lo può
+# dire perché sta su /import/enti e non dentro /enti.
+GET {{base}}/import/enti
+
+### ---------------------------------------------------------------- province
+
+### 4. Le province, con il loro id.
+# Dimostra: le sei province inserite dalla migrazione Flyway, id da 1 a 6.
+GET {{base}}/province
+
+### 5. Gli enti di una provincia (5 = Lecce).
+# Dimostra: filtro per provincia, paginato; dopo l'import totaleElementi è 458.
+GET {{base}}/province/5/enti
+
+### 6. Gli enti di una provincia inesistente.
+# Dimostra: 404 con ProblemDetail.
+GET {{base}}/province/99/enti
+
+### -------------------------------------------------------------------- enti
+
+### 7. Elenco degli enti senza parametri.
+# Dimostra: paginazione di default, 20 per pagina, ordinati per denominazione
+# crescente. Ogni ente ha il NOME della provincia, non il suo id.
+GET {{base}}/enti
+
+### 8. Seconda pagina da 5, ordinata per comune decrescente.
+# Dimostra: i parametri page, size e sort.
+GET {{base}}/enti?page=1&size=5&sort=comune,desc
+
+### 9. Una pagina da centomila righe.
+# Dimostra: il tetto. La dimensione della risposta è 100, non 100000.
+GET {{base}}/enti?size=100000
+
+### 10. Ordinamento su una proprietà che non esiste.
+# Dimostra: 400 che indica il parametro sort in errore, invece di un 500.
+GET {{base}}/enti?sort=colore
+
+### 11. Un ente per id.
+# Dimostra: il singolo ente con il nome della provincia.
+GET {{base}}/enti/1
+
+### 12. Un ente inesistente.
+# Dimostra: 404 con ProblemDetail.
+GET {{base}}/enti/999999
+
+### 13. Un id non numerico.
+# Dimostra: 400, parametro non convertibile; il corpo indica il parametro id.
+GET {{base}}/enti/abc
+
+### 14. Un id non positivo.
+# Dimostra: 400 dalla validazione dei parametri nelle GET (@Positive).
+GET {{base}}/enti/0
+
+### 15. La GET che spiega perché l'import non sta su /enti/import.
+# Dimostra: «import» viene preso come valore di {id}, la conversione a Long
+# fallisce e la risposta è 400, non 405.
+GET {{base}}/enti/import
+
+### 16. Crea un ente.
+# Dimostra: 201 Created con header Location. Nel corpo i valori sono
+# normalizzati: trim sull'indirizzo, tutti gli spazi tolti dal telefono.
+POST {{base}}/enti
+Content-Type: application/json
+
+{
+  "idSorgente": "90001",
+  "denominazione": "Polisportiva San Nicola",
+  "tipo": "PRIVATO",
+  "provinciaId": 1,
+  "comune": "Bari",
+  "indirizzo": "  VIA SPARANO 12 ",
+  "telefono": "080 546 1291"
+}
+
+### 17. Lo stesso idSorgente una seconda volta.
+# Dimostra: 409 Conflict. L'idSorgente è univoco, anche rispetto agli enti importati.
+POST {{base}}/enti
+Content-Type: application/json
+
+{
+  "idSorgente": "90001",
+  "denominazione": "Doppione",
+  "tipo": "PRIVATO",
+  "provinciaId": 1,
+  "comune": "Bari"
+}
+
+### 18. Campi non validi.
+# Dimostra: 400 che elenca QUALI campi sono in errore e perché:
+# idSorgente e denominazione vuoti, tipo mancante, provinciaId negativo, telefono troppo lungo.
+POST {{base}}/enti
+Content-Type: application/json
+
+{
+  "idSorgente": "",
+  "denominazione": "",
+  "provinciaId": -1,
+  "comune": "Bari",
+  "telefono": "0123456789012345678901234567890"
+}
+
+### 19. Un tipo che non esiste.
+# Dimostra: 400 per valore non convertibile nell'enum; il corpo indica il campo tipo.
+POST {{base}}/enti
+Content-Type: application/json
+
+{
+  "idSorgente": "90002",
+  "denominazione": "Circolo",
+  "tipo": "MISTO",
+  "provinciaId": 1,
+  "comune": "Bari"
+}
+
+### 20. Un corpo che non è JSON.
+# Dimostra: 400 per corpo malformato.
+POST {{base}}/enti
+Content-Type: application/json
+
+{ questo non è json
+
+### 21. Una provincia inesistente nel corpo.
+# Dimostra: 404, la provincia indicata non esiste.
+POST {{base}}/enti
+Content-Type: application/json
+
+{
+  "idSorgente": "90003",
+  "denominazione": "Circolo",
+  "tipo": "PUBBLICO",
+  "provinciaId": 99,
+  "comune": "Bari"
+}
+
+### ---------------------------------------------------------- documentazione
+
+### 22. Il documento OpenAPI.
+# Dimostra: la documentazione generata da springdoc; Swagger UI è su /swagger-ui.html.
+GET {{base}}/v3/api-docs
+
+### 23. Lo stato dell'applicazione.
+# Dimostra: l'endpoint usato dall'healthcheck del container.
+GET {{base}}/actuator/health
+
+# Il 503 si dimostra con la sorgente irraggiungibile: avviare l'app con
+# OPEN_DATA_URL=http://localhost:9/enti.json e rilanciare la chiamata 1.

@@ -1,0 +1,5 @@
+# Il namespace raggruppa tutti gli oggetti della nostra applicazione sotto il nome «impianti».
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: impianti

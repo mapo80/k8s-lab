@@ -1,0 +1,13 @@
+# nel contesto di build servono solo pom.xml e src
+target/
+.git/
+.github/
+.idea/
+.vscode/
+*.iml
+http/
+*.md
+docker-compose.yml
+
+# il frontend ha il suo Dockerfile e il suo contesto di build
+web/

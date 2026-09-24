@@ -1,0 +1,30 @@
+{
+  // La macchina del laboratorio. Dentro c'è Docker, kubectl, helm e un cluster
+  // Kubernetes tutto tuo: lo accende post-start.sh ogni volta che apri il Codespace.
+  "name": "Laboratorio Kubernetes",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    // Docker dentro il Codespace: il cluster (k3d) gira in container Docker
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": { "minikube": "none" },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  // 2 core e 8 GB: la macchina più piccola, 60 ore gratis al mese
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  "forwardPorts": [30080, 30090],
+  "portsAttributes": {
+    "30080": { "label": "App (frontend)", "onAutoForward": "notify" },
+    "30090": { "label": "Headlamp", "onAutoForward": "notify" },
+    "6443": { "label": "API server Kubernetes", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}
