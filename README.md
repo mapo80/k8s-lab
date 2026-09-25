@@ -359,6 +359,7 @@ kubectl rollout undo deployment/web -n impianti      # torna alla versione prece
 | Il token del runner non funziona | dura un'ora: aprite di nuovo il link e prendetene uno nuovo |
 | `kubectl` non risponde dopo aver riaperto il Codespace | `bash .devcontainer/post-start.sh` |
 | Il Codespace si spegne dopo 30 minuti senza usarlo | è normale. Si può alzare il tempo in https://github.com/settings/codespaces |
+| Il job `publish` fallisce con `permission_denied: write_package` | avete cancellato e ricreato il repository con lo stesso nome: le immagini del repository vecchio sono rimaste su GHCR e il nuovo non può sovrascriverle. Sul vostro profilo GitHub → **Packages** → `k8s-lab/api` → **Package settings** → **Delete this package**; lo stesso per `k8s-lab/web`. Poi rilanciate il job |
 
 # Gli script
 
